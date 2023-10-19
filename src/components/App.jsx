@@ -10,6 +10,7 @@ import { Modal } from './Modal/Modal';
 export class App extends Component {
   state = {
     page: 1,
+    totalPages: null,
     images: [],
     query: '',
     loading: false,
@@ -20,7 +21,7 @@ export class App extends Component {
   handleSubmit = e => {
     e.preventDefault();
     const { value } = e.target[1];
-    this.setState({ query: value });
+    this.setState({ query: value, page: 1, images: [] });
   };
 
   handleLoadMore = () => {
@@ -35,35 +36,15 @@ export class App extends Component {
     this.setState({ selectedImg: null });
   };
 
-  async componentDidMount() {
-    try {
-      this.setState({ loading: true, err: false });
-      const imgs = await fetchImgs();
-      this.setState({ images: imgs.hits });
-    } catch (e) {
-      this.setState({ err: true });
-    } finally {
-      this.setState({ loading: false });
-    }
-  }
-
   async componentDidUpdate(pProps, pState) {
-    if (pState.page !== this.state.page) {
+    if (pState.page !== this.state.page || pState.query !== this.state.query) {
       try {
         this.setState({ loading: true, err: false });
         const imgs = await fetchImgs(this.state.page, this.state.query);
-        this.setState({ images: [...pState.images, ...imgs.hits] });
-      } catch (e) {
-        this.setState({ err: true });
-      } finally {
-        this.setState({ loading: false });
-      }
-    }
-    if (pState.query !== this.state.query) {
-      try {
-        this.setState({ loading: true, err: false });
-        const imgs = await fetchImgs(this.state.page, this.state.query);
-        this.setState({ images: imgs.hits });
+        this.setState({
+          images: [...pState.images, ...imgs.hits],
+          totalPages: Math.ceil(imgs.totalHits / 12),
+        });
       } catch (e) {
         this.setState({ err: true });
       } finally {
@@ -95,9 +76,9 @@ export class App extends Component {
             visible={true}
           />
         )}
-        {this.state.images.length > 0 && !this.state.err && (
-          <LoadBtn onLoadMore={this.handleLoadMore} />
-        )}
+        {this.state.images.length > 0 &&
+          this.state.page < this.state.totalPages &&
+          !this.state.err && <LoadBtn onLoadMore={this.handleLoadMore} />}
         {this.state.selectedImg && (
           <Modal img={this.state.selectedImg} onClose={this.handleCloseModal} />
         )}
