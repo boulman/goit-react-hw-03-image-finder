@@ -42,7 +42,7 @@ export class App extends Component {
         this.setState({ loading: true, err: false });
         const imgs = await fetchImgs(this.state.page, this.state.query);
         this.setState({
-          images: [...pState.images, ...imgs.hits],
+          images: [...this.state.images, ...imgs.hits],
           totalPages: Math.ceil(imgs.totalHits / 12),
         });
       } catch (e) {
